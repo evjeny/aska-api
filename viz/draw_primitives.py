@@ -1,6 +1,8 @@
 from typing import List, Tuple
+
 from PIL import Image, ImageDraw
-from gif_drawer import DrawnObject
+
+from viz.gif_drawer import DrawnObject
 
 
 class EmptyObject(DrawnObject):

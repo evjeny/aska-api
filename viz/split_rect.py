@@ -1,8 +1,8 @@
 from typing import List, Union, BinaryIO
 from PIL import Image
 
-from gif_drawer import SequentialDrawer
-from draw_primitives import CrossObject, EmptyObject, RoundedRectObject, LineObject, RingObject
+from viz.gif_drawer import SequentialDrawer
+from viz.draw_primitives import CrossObject, EmptyObject, RoundedRectObject, RingObject
 
 
 class SplitRect(SequentialDrawer):
