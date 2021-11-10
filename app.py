@@ -12,8 +12,13 @@ def status():
     return "good!"
 
 
+@app.route("/test", methods=["GET", "POST"])
+def test():
+    return str(request.args.getlist("array"))
+
+
 @app.route("/get_split_rect_viz", methods=["GET", "POST"])
-def get_result_viz():
+def get_split_rect_viz():
     choices = [int(choice) for choice in request.args.getlist("choices")]
     colors = request.args.getlist("colors")
     if len(colors) != 4:
