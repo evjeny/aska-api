@@ -20,14 +20,15 @@ def test():
 @app.route("/get_split_rect_viz", methods=["GET", "POST"])
 def get_split_rect_viz():
     choices = [int(choice) for choice in request.args.getlist("choices")]
+    corrects = [cor == "1" for cor in request.args.getlist("correct")]
     colors = request.args.getlist("colors")
     if len(colors) != 4:
         colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00"]
     
-    if all_in_range(choices, 0, 3) and all_rgba_code(colors):
+    if all_in_range(choices, 0, 3) and all_rgba_code(colors) and len(corrects) == len(choices):
         buffer = BytesIO()
 
-        rect = SplitRect(choices, colors)
+        rect = SplitRect(choices, corrects, colors)
         rect.save_gif(buffer)
         buffer.seek(0)
 

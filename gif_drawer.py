@@ -29,7 +29,8 @@ class SequentialDrawer:
         elif duration == 0:
             alphas = [1]
         else:
-            alphas = [frame / self.fps for frame in range(int(duration * self.fps))]
+            total_frames = int(duration * self.fps)
+            alphas = [frame / total_frames for frame in range(total_frames)]
             if len(alphas) == 0 or alphas[-1] != 1:
                 alphas.append(1)
         

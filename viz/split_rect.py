@@ -2,11 +2,11 @@ from typing import List, Union, BinaryIO
 from PIL import Image
 
 from gif_drawer import SequentialDrawer
-from draw_primitives import EmptyObject, RoundedRectObject, LineObject
+from draw_primitives import CrossObject, EmptyObject, RoundedRectObject, LineObject, RingObject
 
 
 class SplitRect(SequentialDrawer):
-    def __init__(self, choices: List[int], colors: List[str],
+    def __init__(self, choices: List[int], corrects: List[bool], colors: List[str],
         side: int = 800, initial_side: int = 700, line_width: int = 2,
         bg_color = "#ffffff", line_color = "#000000",
         fps: int = 30):
@@ -25,6 +25,7 @@ class SplitRect(SequentialDrawer):
         self.line_color = line_color
 
         self.choices = choices
+        self.corrects = corrects
         self.colors = colors
     
     def init_steps(self):
@@ -32,34 +33,17 @@ class SplitRect(SequentialDrawer):
         x1, y1 = delta, delta
         x2, y2 = self.side - delta, self.side - delta
 
-        for choice in self.choices:
-            self.add_step(
-                RoundedRectObject(
-                    x1, y1, x2, y2, radius=0,
-                    outline=self.line_color,
-                    border_width=self.line_width
-                ),
-                duration=0.1
-            )
-            self.add_step(EmptyObject(), duration=0.3)
-
+        self.add_step(
+            RoundedRectObject(
+                x1, y1, x2, y2, radius=0,
+                outline=self.line_color,
+                border_width=self.line_width
+            ),
+            duration=0.1
+        )
+        for choice, is_correct in zip(self.choices, self.corrects):
             mx = (x1 + x2) // 2
             my = (y1 + y2) // 2
-
-            self.add_step(
-                LineObject(
-                    [(mx, y1), (mx, y2)],
-                    fill=self.line_color, line_width=self.line_width
-                ),
-                duration=0.01
-            )
-            self.add_step(
-                LineObject(
-                    [(x1, my), (x2, my)],
-                    fill=self.line_color, line_width=self.line_width
-                ),
-                duration=0.01
-            )
 
             if choice == 0:
                 x1, y1, x2, y2 = x1, y1, mx, my
@@ -73,8 +57,29 @@ class SplitRect(SequentialDrawer):
             cur_color = self.colors[choice]
             self.add_step(
                 RoundedRectObject(x1, y1, x2, y2, radius=0, fill=cur_color),
-                duration=0.05
+                duration=0.2
             )
+
+            corr_width = (y2 - y1) // 10
+            if is_correct:
+                self.add_step(
+                    RingObject(
+                        x1, y1, x2, y2,
+                        line_color=self.line_color, line_width=corr_width 
+                    ),
+                    duration=0.3
+                )
+            else:
+                self.add_step(
+                    CrossObject(
+                        x1, y1, x2, y2,
+                        line_color=self.line_color, line_width=corr_width 
+                    ),
+                    duration=0.3
+                )
+            
+            self.add_step(EmptyObject(), duration=0.3)
+
         self.add_step(EmptyObject(), duration=5)
     
     def save_gif(self, fp: Union[str, BinaryIO]):
