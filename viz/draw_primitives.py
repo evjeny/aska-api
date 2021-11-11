@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from PIL import Image, ImageDraw
 
-from viz.gif_drawer import DrawnObject
+from viz.gif_drawer import DrawnObject, Camera
 
 
 class EmptyObject(DrawnObject):
@@ -26,13 +26,21 @@ class RoundedRectObject(DrawnObject):
     def draw(self, canvas: Image.Image, alpha: float = 1) -> Image.Image:
         result = canvas.copy()
 
-        dx = (1 - alpha) * (self.x2 - self.x1) / 2
-        dy = (1 - alpha) * (self.y2 - self.y1) / 2
+        nx1, ny1 = self.camera.txy(self.x1, self.y1)
+        nx2, ny2 = self.camera.txy(self.x2, self.y2)
+
+        # print("rect", nx1, ny1, nx2, ny2)
+
+        nradius = self.camera.tw(self.radius)
+        nborder_width = self.camera.tw(self.border_width)
+
+        dx = (1 - alpha) * (nx2 - nx1) / 2
+        dy = (1 - alpha) * (ny2 - ny1) / 2
 
         draw = ImageDraw.Draw(result)
         draw.rounded_rectangle(
-            (self.x1+dx, self.y1+dy, self.x2-dx, self.y2-dy), self.radius*alpha,
-            fill=self.fill, outline=self.outline, width=int(self.border_width*alpha)
+            (nx1+dx, ny1+dy, nx2-dx, ny2-dy), nradius*alpha,
+            fill=self.fill, outline=self.outline, width=int(nborder_width*alpha)
         )
         
         return result
@@ -59,26 +67,21 @@ class LineObject(DrawnObject):
 
         target_length = self.lenghts[-1] * alpha
         min_index = min(i for i in range(len(self.lenghts)) if target_length <= self.lenghts[i])
+        seg_alpha = (target_length - self.lenghts[min_index - 1]) / (self.lenghts[min_index] - self.lenghts[min_index - 1])
+
+        nline_width = self.camera.tw(self.line_width)
 
         draw = ImageDraw.Draw(result)
-        draw.line(self.xy[:min_index], fill=self.fill, width=self.line_width)
+        draw.line([self.camera.txy(*xy) for xy in self.xy[:min_index]], fill=self.fill, width=nline_width)
 
         (x1, y1), (x2, y2) = self.xy[min_index-1: min_index+1]
-        seg_alpha = (target_length - self.lenghts[min_index - 1]) / (self.lenghts[min_index] - self.lenghts[min_index - 1])
-        tx, ty = x1 + (x2 - x1) * seg_alpha, y1 + (y2 - y1) * seg_alpha
-        draw.line([(x1, y1), (tx, ty)], fill=self.fill, width=self.line_width)
+        nx1, ny1 = self.camera.txy(x1, y1)
+        nx2, ny2 = self.camera.txy(x2, y2)
+
+        tx, ty = nx1 + (nx2 - nx1) * seg_alpha, ny1 + (ny2 - ny1) * seg_alpha
+        draw.line([(nx1, ny1), (tx, ty)], fill=self.fill, width=nline_width)
         
         return result
-
-
-class CombinedObject(DrawnObject):
-    def __init__(self, objects: List[DrawnObject]):
-        self.objects = objects
-    
-    def draw(self, canvas: Image.Image, alpha: float = 1) -> Image.Image:
-        for object in self.objects:
-            canvas = object.draw(canvas, alpha=alpha)
-        return canvas
 
 
 class RingObject(DrawnObject):
@@ -93,14 +96,37 @@ class RingObject(DrawnObject):
     def draw(self, canvas: Image.Image, alpha: float = 1) -> Image.Image:
         result = canvas.copy()
 
+        nx1, ny1 = self.camera.txy(self.x1, self.y1)
+        nx2, ny2 = self.camera.txy(self.x2, self.y2)
+        nline_width = self.camera.tw(self.line_width)
+
         draw = ImageDraw.Draw(result)
         draw.arc(
-            [self.x1, self.y1, self.x2, self.y2],
+            [nx1, ny1, nx2, ny2],
             0, int(360 * alpha),
-            fill=self.line_color, width=self.line_width
+            fill=self.line_color, width=nline_width
         )
         
         return result
+
+
+class CombinedObject(DrawnObject):
+    def __init__(self, objects: List[DrawnObject]):
+        self.objects = objects
+        self.camera = None
+
+        for object in self.objects:
+            object.set_camera(self.camera)
+    
+    def set_camera(self, camera: Camera):
+        self.camera = camera
+        for object in self.objects:
+            object.set_camera(self.camera)
+
+    def draw(self, canvas: Image.Image, alpha: float = 1) -> Image.Image:
+        for object in self.objects:
+            canvas = object.draw(canvas, alpha=alpha)
+        return canvas
 
 
 class CrossObject(CombinedObject):

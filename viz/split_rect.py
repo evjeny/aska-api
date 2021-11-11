@@ -33,7 +33,7 @@ class SplitRect(SequentialDrawer):
         x1, y1 = delta, delta
         x2, y2 = self.side - delta, self.side - delta
 
-        self.add_step(
+        self.add_object(
             RoundedRectObject(
                 x1, y1, x2, y2, radius=0,
                 outline=self.line_color,
@@ -55,14 +55,14 @@ class SplitRect(SequentialDrawer):
                 x1, y1, x2, y2 = mx, my, x2, y2
             
             cur_color = self.colors[choice]
-            self.add_step(
+            self.add_object(
                 RoundedRectObject(x1, y1, x2, y2, radius=0, fill=cur_color),
                 duration=0.2
             )
 
             corr_width = (y2 - y1) // 10
             if is_correct:
-                self.add_step(
+                self.add_object(
                     RingObject(
                         x1, y1, x2, y2,
                         line_color=self.line_color, line_width=corr_width 
@@ -70,7 +70,7 @@ class SplitRect(SequentialDrawer):
                     duration=0.3
                 )
             else:
-                self.add_step(
+                self.add_object(
                     CrossObject(
                         x1, y1, x2, y2,
                         line_color=self.line_color, line_width=corr_width 
@@ -78,9 +78,9 @@ class SplitRect(SequentialDrawer):
                     duration=0.3
                 )
             
-            self.add_step(EmptyObject(), duration=0.3)
+            self.add_object(EmptyObject(), duration=0.3)
 
-        self.add_step(EmptyObject(), duration=5)
+        self.add_object(EmptyObject(), duration=5)
     
     def save_gif(self, fp: Union[str, BinaryIO]):
         self.init_steps()

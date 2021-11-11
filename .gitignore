@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # project files
-temp.gif
+rect_example.gif
+sequential_example.gif
