@@ -34,4 +34,4 @@ def get_split_rect_viz():
 
         return send_file(buffer, as_attachment=True, attachment_filename="askaquestion_result.gif")
     
-    return f"Error for values: choices={choices}, colors={colors}"
+    return f"Error for values: choices={choices}, correct={corrects}, colors={colors}"
