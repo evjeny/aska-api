@@ -28,9 +28,7 @@ class RoundedRectObject(DrawnObject):
 
         nx1, ny1 = self.camera.txy(self.x1, self.y1)
         nx2, ny2 = self.camera.txy(self.x2, self.y2)
-
-        # print("rect", nx1, ny1, nx2, ny2)
-
+        
         nradius = self.camera.tw(self.radius)
         nborder_width = self.camera.tw(self.border_width)
 

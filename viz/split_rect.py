@@ -3,6 +3,7 @@ from PIL import Image
 
 from viz.gif_drawer import SequentialDrawer
 from viz.draw_primitives import CrossObject, EmptyObject, RoundedRectObject, RingObject
+from viz.animation_primitives import ZoomToCamera
 
 
 class SplitRect(SequentialDrawer):
@@ -29,9 +30,10 @@ class SplitRect(SequentialDrawer):
         self.colors = colors
     
     def init_steps(self):
-        delta = (self.side - self.initial_side) // 2
+        delta = (self.side - self.initial_side) / 2
         x1, y1 = delta, delta
         x2, y2 = self.side - delta, self.side - delta
+        prev_box = (0, 0, self.side, self.side)
 
         self.add_object(
             RoundedRectObject(
@@ -42,8 +44,8 @@ class SplitRect(SequentialDrawer):
             duration=0.1
         )
         for choice, is_correct in zip(self.choices, self.corrects):
-            mx = (x1 + x2) // 2
-            my = (y1 + y2) // 2
+            mx = (x1 + x2) / 2
+            my = (y1 + y2) / 2
 
             if choice == 0:
                 x1, y1, x2, y2 = x1, y1, mx, my
@@ -60,7 +62,7 @@ class SplitRect(SequentialDrawer):
                 duration=0.2
             )
 
-            corr_width = (y2 - y1) // 10
+            corr_width = (y2 - y1) / 10
             if is_correct:
                 self.add_object(
                     RingObject(
@@ -80,6 +82,12 @@ class SplitRect(SequentialDrawer):
             
             self.add_object(EmptyObject(), duration=0.3)
 
+            cam_dx, cam_dy = (x2 - x1) * 0.05, (y2 - y1) * 0.05
+            self.add_camera_transform(ZoomToCamera(prev_box, (x1 - cam_dx, y1 - cam_dy, x2 + cam_dx, y2 + cam_dy), self.side, self.side), 0.5)
+            prev_box = (x1, y1, x2, y2)
+
+        self.add_object(EmptyObject(), duration=0.3)
+        self.add_camera_transform(ZoomToCamera(prev_box, (0, 0, self.side-1, self.side-1), self.side, self.side), 0.2 * len(self.choices))
         self.add_object(EmptyObject(), duration=5)
     
     def save_gif(self, fp: Union[str, BinaryIO]):

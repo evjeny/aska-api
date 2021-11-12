@@ -11,10 +11,10 @@ class Camera:
         self.sw = 1
     
     def txy(self, x: float, y: float) -> Tuple[float, float]:
-        return self.sx * (x - self.dx), self.sy * (y - self.dy)
+        return int(self.sx * (x - self.dx)), int(self.sy * (y - self.dy))
     
     def tw(self, w: float) -> float:
-        return self.sw * w
+        return int(self.sw * w)
 
 
 class AnimatedCamera(Camera):
@@ -73,8 +73,10 @@ class SequentialDrawer:
             
             self.frames.append(cur_frame)
 
+            self.camera = animated_camera
+
     def save_gif(self, fp: Union[str, BinaryIO]):
         first_frame = self.frames.pop(0)
         duration = int(1000 / self.fps)
         
-        first_frame.save(fp, format="gif", save_all=True, append_images=self.frames, optimize=False, duration=duration, loop=0)
+        first_frame.save(fp, format="gif", save_all=True, append_images=self.frames, optimize=True, duration=duration, loop=0)
